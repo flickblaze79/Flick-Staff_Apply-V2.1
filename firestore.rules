@@ -1,0 +1,126 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helpers ---
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isOwnerEmailOrUid() {
+      return isSignedIn() && (
+        request.auth.uid == 'NtQwPhiWQpRRnq2klOAKnSWoQKi1' ||
+        (request.auth.token.email != null && (
+          request.auth.token.email.lower() == 'flickblaze7@gmail.com' ||
+          request.auth.token.email.lower() == 'nxtawais95@gmail.com'
+        ))
+      );
+    }
+
+    // Role helpers (RBAC) - Safely check document existence before reading
+    function userExists() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function rawRole() {
+      return (userExists() && ('role' in getUserData()) && getUserData().role is string) ? getUserData().role.lower() : 'user';
+    }
+    function isOwnerAdmin() {
+      return isSignedIn() && (isOwnerEmailOrUid() || rawRole() == 'owner');
+    }
+    function isAdmin() {
+      return isSignedIn() && (isOwnerAdmin() || rawRole() == 'admin');
+    }
+    function isMod() {
+      return isSignedIn() && (isAdmin() || rawRole() == 'mod' || rawRole() == 'moderator');
+    }
+    function isStaff() {
+      return isSignedIn() && (isMod() || rawRole() == 'staff');
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      match /application_settings/cooldown {
+        allow read: if isOwner(userId) || isStaff();
+        allow write: if isStaff();
+      }
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // Applications Collection
+    match /applications/{appId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    // Reports Collection
+    match /reports/{reportId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isStaff() || (resource != null && isOwner(resource.data.authorUid));
+      allow delete: if isAdmin() || (resource != null && isOwner(resource.data.authorUid));
+    }
+
+    // Notifications Collection
+    match /notifications/{notifId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Audit Logs Collection
+    match /audit_logs/{logId} {
+      allow read, create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    // Settings Collection
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isOwnerAdmin();
+    }
+
+    // Roles Collection
+    match /roles/{roleId} {
+      allow read: if isSignedIn();
+      allow write: if isOwnerAdmin();
+    }
+
+    // Tasks Collection - Full access for signed-in users (Owner, Admin, Mod, Staff)
+    match /tasks/{taskId} {
+      allow read, write, create, update, delete: if isSignedIn();
+    }
+
+    // Custom Panels Collection
+    match /custom_panels/{panelId} {
+      allow read: if isSignedIn();
+      allow write: if isOwnerAdmin();
+    }
+
+    // Diagnostic Test Collection
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+  }
+}
+

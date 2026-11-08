@@ -1,0 +1,6 @@
+{
+  "name": "Flick Staff Apply V2.1",
+  "description": "Official Flick Staff Application portal, safety reporting system, and executive team management platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,179 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile and role metadata",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "photoURL": { "type": "string", "maxLength": 500 },
+        "role": { "type": "string", "enum": ["USER", "STAFF", "MOD", "ADMIN", "OWNER"] },
+        "createdAt": { "type": "string" },
+        "lastSignInAt": { "type": "string" },
+        "isSuspended": { "type": "boolean" },
+        "suspensionReason": { "type": "string", "maxLength": 500 },
+        "suspensionDate": { "type": "string" },
+        "suspendedBy": { "type": "string", "maxLength": 128 },
+        "roleAssignedAt": { "type": "string" },
+        "roleAssignedBy": { "type": "string", "maxLength": 128 },
+        "providerId": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["uid", "name", "email", "role", "createdAt"]
+    },
+    "StaffApplication": {
+      "title": "StaffApplication",
+      "description": "Staff applications submitted by users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "applicantUid": { "type": "string", "maxLength": 128 },
+        "applicantName": { "type": "string", "maxLength": 100 },
+        "applicantEmail": { "type": "string", "maxLength": 150 },
+        "discordUsername": { "type": "string", "maxLength": 100 },
+        "discordUserId": { "type": "string", "maxLength": 100 },
+        "age": { "type": "string", "maxLength": 10 },
+        "timezone": { "type": "string", "maxLength": 50 },
+        "availableHours": { "type": "string", "maxLength": 50 },
+        "category": { "type": "string", "maxLength": 50 },
+        "position": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["Pending", "Under Review", "Accepted", "Rejected"] },
+        "queue": { "type": "string", "maxLength": 50 },
+        "assignedReviewerUid": { "type": "string", "maxLength": 128 },
+        "assignedReviewerName": { "type": "string", "maxLength": 100 },
+        "assignmentStatus": { "type": "string", "maxLength": 50 },
+        "assignedAt": { "type": "string" },
+        "reviewerUid": { "type": "string", "maxLength": 128 },
+        "reviewerRole": { "type": "string", "maxLength": 50 },
+        "reviewNotes": { "type": "string", "maxLength": 2000 },
+        "decisionAt": { "type": "string" },
+        "autoRejected": { "type": "boolean" },
+        "autoRejectionReason": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["applicantUid", "applicantName", "applicantEmail", "discordUsername", "category", "position", "status", "createdAt", "updatedAt"]
+    },
+    "UserReport": {
+      "title": "UserReport",
+      "description": "User reports submitted to staff/mods/admins",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "authorUid": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 100 },
+        "authorEmail": { "type": "string", "maxLength": 150 },
+        "reportType": { "type": "string", "maxLength": 100 },
+        "subject": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "enum": ["Open", "Reviewing", "Under Review", "Resolved", "Rejected", "Dismissed"] },
+        "evidenceUrl": { "type": "string", "maxLength": 1000 },
+        "videoLink": { "type": "string", "maxLength": 1000 },
+        "assignedToUid": { "type": "string", "maxLength": 128 },
+        "assignedToName": { "type": "string", "maxLength": 100 },
+        "resolutionNotes": { "type": "string", "maxLength": 2000 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["authorUid", "authorName", "authorEmail", "reportType", "subject", "description", "status", "createdAt", "updatedAt"]
+    },
+    "NotificationItem": {
+      "title": "NotificationItem",
+      "description": "User notification messages",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "recipientUid": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "message": { "type": "string", "maxLength": 1000 },
+        "type": { "type": "string", "enum": ["application", "report", "system", "role"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["recipientUid", "title", "message", "type", "read", "createdAt"]
+    },
+    "AuditLogEntry": {
+      "title": "AuditLogEntry",
+      "description": "System audit logs for staff/admin actions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "action": { "type": "string", "maxLength": 100 },
+        "actorUid": { "type": "string", "maxLength": 128 },
+        "actorName": { "type": "string", "maxLength": 100 },
+        "actorEmail": { "type": "string", "maxLength": 150 },
+        "actorRole": { "type": "string", "maxLength": 50 },
+        "targetResource": { "type": "string", "maxLength": 200 },
+        "targetUid": { "type": "string", "maxLength": 128 },
+        "timestamp": { "type": "string" },
+        "metadata": { "type": "object" }
+      },
+      "required": ["action", "actorUid", "actorName", "actorEmail", "actorRole", "targetResource", "timestamp"]
+    },
+    "SystemSettings": {
+      "title": "SystemSettings",
+      "description": "System-wide global settings",
+      "type": "object",
+      "properties": {
+        "applicationsOpen": { "type": "boolean" },
+        "categoryToggles": {
+          "type": "object",
+          "properties": {
+            "Developer Apply": { "type": "boolean" },
+            "Staff Apply": { "type": "boolean" },
+            "Moderator Apply": { "type": "boolean" },
+            "Helper Apply": { "type": "boolean" }
+          }
+        },
+        "announcementText": { "type": "string", "maxLength": 1000 },
+        "requirementsText": { "type": "string", "maxLength": 1000 },
+        "autoRejectHours": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["applicationsOpen", "categoryToggles", "announcementText", "requirementsText", "autoRejectHours", "updatedAt"]
+    },
+    "ApplicationCooldown": {
+      "title": "ApplicationCooldown",
+      "description": "Cooldown settings for user reapplication",
+      "type": "object",
+      "properties": {
+        "cooldownUntil": { "type": "string", "format": "date-time" },
+        "lastDecision": { "type": "string", "enum": ["Accepted", "Rejected"] },
+        "lastApplicationId": { "type": "string", "maxLength": 128 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["cooldownUntil", "lastDecision", "lastApplicationId", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles stored by UID"
+    },
+    "/users/{userId}/application_settings/cooldown": {
+      "schema": "ApplicationCooldown",
+      "description": "User application cooldown information"
+    },
+    "/applications/{appId}": {
+      "schema": "StaffApplication",
+      "description": "Submitted staff applications"
+    },
+    "/reports/{reportId}": {
+      "schema": "UserReport",
+      "description": "User reports"
+    },
+    "/notifications/{notifId}": {
+      "schema": "NotificationItem",
+      "description": "User notifications"
+    },
+    "/audit_logs/{logId}": {
+      "schema": "AuditLogEntry",
+      "description": "Audit log records"
+    },
+    "/settings/{settingId}": {
+      "schema": "SystemSettings",
+      "description": "Global application configuration"
+    }
+  }
+}

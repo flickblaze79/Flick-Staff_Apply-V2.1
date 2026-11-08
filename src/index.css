@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #087BFF;
+  --color-secondary: #00D9FF;
+  --color-panel: #0A1224;
+  --color-canvas: #030712;
+  --color-main: #FFFFFF;
+  --color-muted: #CBD5E1;
+}
+
+:root.light {
+  --color-panel: #F8FAFC;
+  --color-canvas: #FFFFFF;
+  --color-main: #0F172A;
+  --color-muted: #475569;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.blue-glow {
+  box-shadow: 0 0 25px rgba(8, 123, 255, 0.35);
+}
+
+.cyan-glow {
+  box-shadow: 0 0 25px rgba(0, 217, 255, 0.4);
+}
+
+/* Mobile & Low-Memory Performance Optimization */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, select, input, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 180px;
+}
+
