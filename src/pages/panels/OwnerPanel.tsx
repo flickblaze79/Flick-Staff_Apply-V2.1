@@ -69,6 +69,7 @@ import { GitHubSyncCard } from '../../components/GitHubSyncCard';
 import { TaskDelegationForm } from '../../components/TaskDelegationForm';
 import { StaffTasksPanel } from '../../components/StaffTasksPanel';
 import { ConfirmationDialog } from '../../components/ConfirmationDialog';
+import { OwnerDiagnosticPanel } from '../../components/OwnerDiagnosticPanel';
 import { checkAndProcessAutoRejectionsLocal, addTask, getTasks, updateTask, fetchTasksFromFirestore, deleteTask } from '../../lib/storage';
 import {
   Crown,
@@ -1038,6 +1039,7 @@ export const OwnerPanel: React.FC = () => {
 
         {activeTab === 'settings' && (
            <motion.div key="settings" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="max-w-4xl mx-auto py-8 space-y-8">
+               <OwnerDiagnosticPanel />
               {/* Recruitment Category Toggles */}
               <div className="bg-panel border border-secondary/30 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl space-y-8 relative overflow-hidden">
                  <div className="absolute top-0 right-0 p-8 opacity-5"><Settings className="w-40 h-40" /></div>

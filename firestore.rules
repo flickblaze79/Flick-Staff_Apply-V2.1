@@ -2,24 +2,20 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- Helpers ---
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-    function incoming() {
-      return request.resource.data;
-    }
-    function existing() {
-      return resource.data;
-    }
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
+    // --- Global Helpers ---
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    
+    // Only verify email_verified for standard user actions, not necessarily for Owner
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
 
-    function isOwnerEmailOrUid() {
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    function isOwner() {
       return isSignedIn() && (
         request.auth.uid == 'NtQwPhiWQpRRnq2klOAKnSWoQKi1' ||
         (request.auth.token.email != null && (
@@ -29,58 +25,36 @@ service cloud.firestore {
       );
     }
 
-    // Role helpers (RBAC) - Safely check document existence before reading
-    function userExists() {
-      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
-    }
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-    function rawRole() {
-      return (userExists() && ('role' in getUserData()) && getUserData().role is string) ? getUserData().role.lower() : 'user';
-    }
-    function isOwnerAdmin() {
-      return isSignedIn() && (isOwnerEmailOrUid() || rawRole() == 'owner');
-    }
-    function isAdmin() {
-      return isSignedIn() && (isOwnerAdmin() || rawRole() == 'admin');
-    }
-    function isMod() {
-      return isSignedIn() && (isAdmin() || rawRole() == 'mod' || rawRole() == 'moderator');
-    }
-    function isStaff() {
-      return isSignedIn() && (isMod() || rawRole() == 'staff');
-    }
-
     // Default deny catch-all
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Users Collection
+    // Users Collection - Hardened
     match /users/{userId} {
-      match /application_settings/cooldown {
-        allow read: if isOwner(userId) || isStaff();
-        allow write: if isStaff();
-      }
       allow read: if isSignedIn();
-      allow write: if isOwner(userId) || isAdmin();
+      allow write: if isOwner() || (isSignedIn() && request.auth.uid == userId);
+      
+      match /application_settings/cooldown {
+        allow read: if isSignedIn() && (isOwner() || request.auth.uid == userId);
+        allow write: if isOwner();
+      }
     }
 
-    // Applications Collection
+    // Applications Collection - Hardened
     match /applications/{appId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isStaff();
-      allow delete: if isAdmin();
+      allow create: if isVerified();
+      allow update: if isAdmin() || isOwner();
+      allow delete: if isOwner();
     }
 
     // Reports Collection
     match /reports/{reportId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isStaff() || (resource != null && isOwner(resource.data.authorUid));
-      allow delete: if isAdmin() || (resource != null && isOwner(resource.data.authorUid));
+      allow create: if isVerified();
+      allow update: if isAdmin() || isOwner() || (resource != null && request.auth.uid == resource.data.authorUid);
+      allow delete: if isAdmin() || isOwner() || (resource != null && request.auth.uid == resource.data.authorUid);
     }
 
     // Notifications Collection
@@ -90,36 +64,38 @@ service cloud.firestore {
 
     // Audit Logs Collection
     match /audit_logs/{logId} {
-      allow read, create: if isSignedIn();
+      allow read: if isAdmin() || isOwner();
+      allow create: if isSignedIn();
       allow update, delete: if false;
     }
 
     // Settings Collection
     match /settings/{settingId} {
       allow read: if true;
-      allow write: if isOwnerAdmin();
+      allow write: if isOwner();
     }
 
     // Roles Collection
     match /roles/{roleId} {
       allow read: if isSignedIn();
-      allow write: if isOwnerAdmin();
+      allow write: if isOwner();
     }
 
-    // Tasks Collection - Full access for signed-in users (Owner, Admin, Mod, Staff)
+    // Tasks Collection
     match /tasks/{taskId} {
-      allow read, write, create, update, delete: if isSignedIn();
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isOwner();
     }
 
     // Custom Panels Collection
     match /custom_panels/{panelId} {
       allow read: if isSignedIn();
-      allow write: if isOwnerAdmin();
+      allow write: if isOwner();
     }
-
+    
     // Diagnostic Test Collection
     match /test/{docId} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
