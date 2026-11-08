@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig(() => {
   return {
-    base: process.env.NODE_ENV === 'production' ? '/Flick-Staff_Apply-V2.1/' : '/',
+    base: './',
     plugins: [
       react(),
       tailwindcss(),
