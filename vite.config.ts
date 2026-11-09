@@ -67,7 +67,7 @@ export default defineConfig(() => {
         configureServer(server) {
           server.middlewares.use((req, res, next) => {
             if (req.url === '/' || req.url === '/index.html') {
-              res.writeHead(302, { Location: '/FLICK-web-STAFF-APPLY-V2/' });
+              res.writeHead(302, { Location: '/Flick-Staff_Apply-V2.1/' });
               res.end();
               return;
             }
